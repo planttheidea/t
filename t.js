@@ -2,7 +2,8 @@
 	var t = function(selector,original){
 			return new t.p.init(selector,original);
 		},
-		oid = 1,
+		oid = 0,
+		pid = 0,
 		eventHandlers = {},
 		helpAttrs = {
 			ajaxActiveX:(function(){
@@ -103,9 +104,29 @@
 					
 					xhr = null;								
 				});
-					
+				
+				queryString = helpFuncs.buildParams(data,cache);
+				
+				if(helpFuncs.testType(xhr) === 'xmlhttprequest'){						
+					xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
+				}
+				
+				if(type === 'POST'){
+					xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');					
+					xhr.send(queryString);
+				} else {
+					options.url += '?' + queryString;	
+								
+					xhr.send(null);
+				}
+			},
+			buildParams:function(data,cache){
+				var queryStringArray = [],
+					queryString = '',
+					len = 0;
+				
 				for(var key in data){
-					queryStringArray.push(encodeURIComponent(key) + '=' + encodeURIComponent(options.data[key]));
+					queryStringArray.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
 					len++;
 				}
 				
@@ -116,23 +137,8 @@
 				if(len > 0){
 					queryString = queryStringArray.join('&');
 				}
-						
-				xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
 				
-				if(type === 'POST'){
-					xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-					xhr.setRequestHeader('Content-Length',queryString.length);
-					xhr.setRequestHeader('Connection','close');
-					
-					xhr.send(queryString);
-				} else {
-					options.url += '?' + queryString;	
-								
-					xhr.send(null);
-				}
-			},
-			buildParams:function(obj){
-				
+				return queryString;
 			},
 			cleanObj:function(obj){
 				for(var key in obj){
@@ -294,6 +300,95 @@
 				return ((el.offsetWidth > 0) && (el.offsetHeight > 0));
 			}
 		},
+		pubsub = (function(){
+			var topics = {},
+				IDs = {};
+				
+			function prv_getID(idObj){
+				return IDs[idObj.name];
+			}
+			
+			function prv_publish(publishObj){
+				var subscribers,
+					len;
+				
+				if(!topics[publishObj.topic]){
+					return false;
+				}
+				
+				subscribers = topics[publishObj.topic];
+				len = (subscribers ? subscribers.length : 0);
+					
+				while(len--){
+					subscribers[len].func(publishObj.topic,publishObj.data);
+				}
+			}
+			
+			function prv_unsubscribe(unsubscribeObj){
+				if(unsubscribeObj.token > 0){
+					for(var m in topics){
+						if(topics[m]){
+							for (var i = topics[m].length; i--;) {			
+								if(topics[m][i].token === unsubscribeObj.token){7
+									IDs[unsubscribeObj.name] = undefined;
+									topics[m].splice(i,1);
+									return 0;
+								}
+							}
+						}
+					}
+				}
+				
+				return this;
+			}
+			
+			function prv_isAssigned(token){
+				return ((token !== undefined) && (token > 0))
+			}
+			
+			function prv_subscribe(subscribeObj){			
+				if(prv_isAssigned({name:subscribeObj.name})){
+					prv_unsubscribe(subscribeObj.name);
+				}
+				
+				if(!topics[subscribeObj.topic]){
+					topics[subscribeObj.topic] = [];
+					exists = false;
+				}
+				
+				IDs[subscribeObj.name] = subscribeObj.token = (++pid);
+				
+				topics[subscribeObj.topic].push({
+					token:subscribeObj.token,
+					func:subscribeObj.fn
+				});
+				
+				return subscribeObj.token;
+			}
+			
+			function pub_publish(publishObj){
+				return prv_publish(publishObj);
+			}
+			
+			function pub_unsubscribe(unsubscribeObj){
+				return prv_unsubscribe(unsubscribeObj);
+			}
+			
+			function pub_isAssigned(token){
+				return prv_isAssigned(token);
+			}
+			
+			function pub_subscribe(subscribeObj){
+				return prv_subscribe(subscribeObj);
+			}
+			
+			return {
+				isAssigned:pub_isAssigned,
+				publish:pub_publish,
+				subscribe:pub_subscribe,
+				unsubscribe:pub_unsubscribe
+			};
+		})(),
 		supportCheck = (function(){
 			var animation = (function(){
 					var elem = document.createElement('div'),
@@ -662,18 +757,8 @@
 				
 			styleNode.type = 'text/css';
 			styleNode.id = 'TStyle';
-				
-			function prv_getCss(){
-				var cssString = '';
-				
-				for(var key in css){
-					cssString += css[key];
-				}
-				
-				return cssString;
-			};
 			
-			function prv_setCss(cssObj){
+			function prv_addCssRule(cssObj){
 				for(var key in cssObj){
 					if(cssObj.hasOwnProperty(key)){
 						css[key] = cssObj[key];
@@ -704,31 +789,62 @@
 				head.appendChild(styleNode);
 			};
 			
-			function prv_removeCss(){
+			function prv_clearCss(){
 				head.removeChild(styleNode);
 			};
-			
-			function pub_getCss(){
-				return prv_getCss();
+				
+			function prv_getCss(){
+				var cssString = '';
+				
+				for(var key in css){
+					cssString += css[key];
+				}
+				
+				return cssString;
 			};
 			
-			function pub_setCss(cssObj){
-				return prv_setCss(cssObj);
+			function prv_removeCssRule(rules){
+				if(helpFuncs.testType(rules) === 'array'){
+					for(var i = rules.length; i--;){
+						if(css.hasOwnProperty(rules[i])){
+							delete css[rules[i]];
+						}
+					}
+				} else if(helpFuncs.testType(rules) === 'string'){
+					if(css.hasOwnProperty(rules)){
+						delete css[rules];
+					}
+				}
+				
+				prv_applyCss();
+			};
+			
+			function pub_addCssRule(cssObj){
+				return prv_addCssRule(cssObj);
 			};
 			
 			function pub_applyCss(){
 				return prv_applyCss();
 			};
 			
-			function pub_removeCss(){
-				return prv_removeCss();
+			function pub_getCss(){
+				return prv_getCss();
+			};
+			
+			function pub_clearCss(){
+				return prv_clearCss();
+			};
+			
+			function pub_removeCssRule(rules){
+				return prv_removeCssRule(rules);
 			};
 			
 			return {
+				add:pub_addCssRule,
 				apply:pub_applyCss,
+				clear:pub_clearCss,
 				get:pub_getCss,
-				remove:pub_removeCss,
-				set:pub_setCss
+				remove:pub_removeCssRule
 			}
 		})(),
 		setDefaults = function(options){
@@ -803,7 +919,8 @@
 		this.name = 't.js JavaScript Library';
 		this.events = {};
 		this.dataObj = {};
-		this.oid = oid++;
+		this.subscribes = {};;
+		this.oid = ++oid;
 	};
 	
 	t.p.init.prototype = t.p;
@@ -861,11 +978,20 @@
 		merge:function(arr){
 			return helpfFuncs.mergeArray(arr);
 		},
+		publish:function(obj){
+			return pubsub.publish(obj);
+		},
+		subscribe:function(obj){
+			return pubsub.subscribe(obj);
+		},
 		supports:function(){
 			return supportCheck[arguments[0]]();
 		},
 		type:function(obj){
 			return helpFuncs.testType(obj);
+		},
+		unsubscribe:function(obj){
+			return pubsub.unsubscribe(obj);
 		},
 		eid:1,
 		useCss:true,
@@ -877,7 +1003,7 @@
 	
 	resetDefaults();
 	
-	t.css('set',{
+	t.css('add',{
 		TransitionOpacity:'.TransitionOpacity { -webkit-transition:opacity 350ms; -moz-transition:opacity 350ms; -o-transition:opacity 350ms; transition:opacity 350ms; will-change:opacity; }'
 	});
 	
