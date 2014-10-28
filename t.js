@@ -1,6 +1,6 @@
 (function(window,document){
 	var t = function(selector,original){
-			return new t.fn.init(selector,original);
+			return new t.p.init(selector,original);
 		},
 		oid = 1,
 		eventHandlers = {},
@@ -210,6 +210,17 @@
 				scanForMatch(obj);
 				
 				return valArray;
+			},
+			mergeArray:function(arr){
+				return arr.slice().sort(function(a,b){
+						return a - b;
+					}).reduce(function(a,b){
+						if (a.slice(-1)[0] !== b){
+							a.push(b);
+						}
+						
+						return a;
+					},[]);
 			},
 			nestedObj:function(base,names){
 				var prev = base;
@@ -744,7 +755,7 @@
 			}
 		};
 	
-	t.fn = t.prototype = {
+	t.p = t.prototype = {
 		each:function(callback){
 			this.map(callback);
 			return this;
@@ -766,7 +777,7 @@
 		version:'0.1.0'
 	};
 	
-	t.fn.init = function(selector,original){
+	t.p.init = function(selector,original){
 		var els;
 		
 		if(t.type(selector) === 'string'){
@@ -789,15 +800,15 @@
 		this.original = original || selector;
 		this.selector = selector;
 		this.version = '0.1.0';
-		this.name = 't JavaScript Library';
+		this.name = 't.js JavaScript Library';
 		this.events = {};
 		this.dataObj = {};
 		this.oid = oid++;
 	};
 	
-	t.fn.init.prototype = t.fn;
+	t.p.init.prototype = t.p;
 
-	t.extend = t.fn.extend = function() {		
+	t.extend = t.p.extend = function() {		
 		var target = arguments[0] || {},
 			len = arguments.length,
 			i = 1;
@@ -847,6 +858,9 @@
 		defaults:function(options){
 			return setDefaults(options);
 		},
+		merge:function(arr){
+			return helpfFuncs.mergeArray(arr);
+		},
 		supports:function(){
 			return supportCheck[arguments[0]]();
 		},
@@ -867,7 +881,7 @@
 		TransitionOpacity:'.TransitionOpacity { -webkit-transition:opacity 350ms; -moz-transition:opacity 350ms; -o-transition:opacity 350ms; transition:opacity 350ms; will-change:opacity; }'
 	});
 	
-	t.fn.extend({
+	t.p.extend({
 		addClass:function(cls){
 			var clsArray = cls.split(' ');
 			
@@ -946,7 +960,7 @@
 		},
 		children:function(selector){
 			var self = this,
-				els = [],
+				childrenArray = [],
 				children;
 			
 			if(t.type(selector) !== 'undefined'){
@@ -958,7 +972,7 @@
 					
 					for(var i = qs.length; i--;){										
 						if(qs[i].parentNode === el){
-							els.push(qs[i]);
+							childrenArray.push(qs[i]);
 						}
 					}
 				});
@@ -967,12 +981,12 @@
 					children = el.children;
 					
 					for(var i = children.length; i--;){
-						els.push(children[i]);
+						childrenArray.push(children[i]);
 					}
 				});
 			}
 			
-			return t(els,self.selector);
+			return t(helpFuncs.mergeArray(childrenArray),self);
 		},
 		data:function(dataKeys,val){
 			var self = this;						
@@ -1010,10 +1024,11 @@
 		eq:function(i){
 			var self = this;						
 			
-			return t(self[i],self.selector);
+			return t(self[i],self);
 		},
 		filter:function(fn){	
 			var self = this,
+				filterArray = [],
 				func;
 								
 			if(t.type(fn) === 'string'){														
@@ -1066,24 +1081,26 @@
 						func = fn;
 						break;
 				}
-			}					
+			}
 			
-			return t(Array.prototype.filter.call(this,func),self.selector);
+			filterArray = Array.prototype.filter.call(this,func);			
+			
+			return t(helpFuncs.mergeArray(filterArray),self);
 		},
 		find:function(selector){
 			var self = this,
-				els = [];
+				findArray = [];
 			
 			self.each(function(el){
 				children = el.querySelectorAll(selector);
 				
 				if(children.length > 0){
-					els.push(children[0]);
+					findArray.push(children[0]);
 				}
 			});
 			
-			if(els.length > 0){
-				return t(els,self.selector);
+			if(findArray.length > 0){
+				return t(helpFuncs.mergeArray(findArray),self);
 			} else {
 				return undefined;
 			}
@@ -1166,10 +1183,11 @@
 				nextArray.push(el.nextSibling);
 			});
 			
-			return t(nextArray,self.selector);
+			return t(helpFuncs.mergeArray(nextArray),self);
 		},
 		not:function(fn){
 			var self = this,
+				notArray = [],
 				func;
 								
 			if(t.type(fn) === 'string'){													
@@ -1224,7 +1242,9 @@
 				}
 			}					
 			
-			return t(Array.prototype.filter.call(self,func),self.selector);
+			notArray = Array.prototype.filter.call(self,func);
+			
+			return t(helpFuncs.mergeArray(notArray),self);
 		},
 		on:function(event,fn,delegate){
 			var eventArray = event.split('.'),
@@ -1313,7 +1333,7 @@
 				parentArray.push(el.parentNode);
 			});
 			
-			return t(parentArray,self.selector);
+			return t(helpFuncs.mergeArray(parentArray),self);
 		},
 		position:function(){
 			return this.mapOne(function(el){
@@ -1339,7 +1359,7 @@
 				previousArray.push(el.previousSibling);
 			});
 			
-			return t(previousArray,self.selector);
+			return t(helpFuncs.mergeArray(previousArray),self);
 		},
 		property:function(prop,val){
 			if(typeof(prop) === 'object'){
@@ -1386,7 +1406,7 @@
 				siblingArray.push(helpFuncs.testSibling((el.parentNode || {}).firstChild,el));
 			});
 			
-			return t(siblingArray,self.selector);
+			return t(helpFuncs.mergeArray(siblingArray),self);
 		},
 		style:function(styles,val){
 			var self = this;
