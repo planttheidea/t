@@ -913,7 +913,7 @@
 		}
 		
 		this.length = els.length;
-		this.original = original || selector;
+		this.originalObj = original || selector;
 		this.selector = selector;
 		this.version = '0.1.0';
 		this.name = 't.js JavaScript Library';
@@ -1372,6 +1372,29 @@
 			
 			return t(helpFuncs.mergeArray(notArray),self);
 		},
+		off:function(event,delegate){
+			var eventArray = event.split('.'),
+				eventName = eventArray[0],
+				self = this,
+				fnArray = [],
+				base;
+				
+			eventArray.shift();						
+			
+			fnArray = helpFuncs.getNestedObjVals(self.events[eventName],eventArray,true,true);						
+			helpFuncs.cleanObj(self.events);
+			
+			return self.each(function(el){
+				if(!helpFuncs.validElement(el)){		
+					return true;
+				}
+				
+				for(var i = fnArray.length; i--;){										
+					el.removeEventListener(eventName,eventHandlers[fnArray[i]],false);
+					delete eventHandlers[fnArray[i]];
+				}
+			});
+		},
 		on:function(event,fn,delegate){
 			var eventArray = event.split('.'),
 				eventName = eventArray[0],
@@ -1428,28 +1451,8 @@
 				el.addEventListener(eventName,eventHandlers[eid],false);
 			});
 		},
-		off:function(event,delegate){
-			var eventArray = event.split('.'),
-				eventName = eventArray[0],
-				self = this,
-				fnArray = [],
-				base;
-				
-			eventArray.shift();						
-			
-			fnArray = helpFuncs.getNestedObjVals(self.events[eventName],eventArray,true,true);						
-			helpFuncs.cleanObj(self.events);
-			
-			return self.each(function(el){
-				if(!helpFuncs.validElement(el)){		
-					return true;
-				}
-				
-				for(var i = fnArray.length; i--;){										
-					el.removeEventListener(eventName,eventHandlers[fnArray[i]],false);
-					delete eventHandlers[fnArray[i]];
-				}
-			});
+		original:function(){
+			return this.originalObj;
 		},
 		parent:function(){
 			var self = this,
@@ -1462,10 +1465,14 @@
 			return t(helpFuncs.mergeArray(parentArray),self);
 		},
 		position:function(){
-			return this.mapOne(function(el){
+			return this.mapOne(function(el,i){
+				var rect = el.getBoundingClientRect();
+							
 				return {
 					left:el.offsetLeft,
-					top:el.offsetTop
+					top:el.offsetTop,
+					rLeft:Math.round(rect.left),
+					rTop:Math.round(rect.top)
 				};
 			});
 		},
@@ -1551,9 +1558,17 @@
 					break;
 				case 'object':
 					return self.each(function(el){
+						var tempVal;
+						
 						for(var key in styles){
 							if(styles.hasOwnProperty(key)){
-								el.style[key] = styles[key];
+								tempVal = styles[key];
+								
+								if(helpFuncs.testType(tempVal) === 'number'){
+									tempVal += 'px';
+								}
+								
+								el.style[key] = tempVal;
 							}
 						}
 					});
@@ -1561,16 +1576,16 @@
 				case 'array':
 					return self.mapOne(function(el){
 						var stylesObj = {},
-							val;
+							tempVal;
 						
 						for(var i = 0, len = styles.length; i < len; i++){
-							val = getComputedStyle(el)[styles[i]];
+							tempVal = getComputedStyle(el)[styles[i]];
 							
-							if(!parseFloat(getComputedStyle(el)[styles[i]]).isNaN){
-								val = Math.round(parseFloat(getComputedStyle(el)[styles[i]]));
+							if(!isNaN(parseFloat(tempVal))){
+								tempVal = Math.round(parseFloat(tempVal));
 							}
 							
-							stylesObj[styles[i]] = val;
+							stylesObj[styles[i]] = tempVal;
 						}
 						
 						
@@ -1579,10 +1594,17 @@
 					break;
 				default:
 					return self.mapOne(function(el){
-						var stylesObj = {};
+						var stylesObj = {},
+							tempVal;
 						
 						for(var i = 0, styles = getComputedStyle(el), len = styles.length; i < len; i++){
-							stylesObj[styles[i]] = styles[styles[i]];
+							tempVal = styles[styles[i]];
+							
+							if(!isNaN(parseFloat(tempVal))){
+								tempVal = Math.round(parseFloat(tempVal));
+							}
+							
+							stylesObj[styles[i]] = tempVal;
 						}
 						
 						
