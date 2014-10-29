@@ -90,19 +90,31 @@
 						}
 						
 						if(t.type(options.success) === 'function'){
-							options.success(response);
+							options.success(response,xhr);
 						}
-						
-						callback.call(this,response);
+												
+						callback(response,xhr);				
 					} else {
 						if(t.type(options.failure) === 'function'){
-							options.failure(response);
+							options.failure(response,xhr);
 						}
 						
-						callback.call(this,response);
+						callback(response,xhr);
 					}
+				});
+				
+				xhr.addEventListener('error',function(){
+					console.log(new Error("Can't XHR " + JSON.stringify(options.url)));
 					
-					xhr = null;								
+					if(t.type(options.failure) === 'function'){
+						options.failure(response,xhr);
+					}
+				});
+				
+				xhr.addEventListener('progress',function(e){
+					if(t.type(options.progress) === 'function'){
+						options.progress((e.lengthComputable ? ((e.loaded / e.total) * 100) : undefined),xhr);
+					}
 				});
 				
 				queryString = helpFuncs.buildParams(data,cache);
@@ -807,7 +819,7 @@
 		css = (function(){
 			var css = {
 					allNodes:'*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;letter-spacing:1px;font:inherit;}',
-					NoSelect:'.NoSelect{-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;',
+					NoSelect:'.NoSelect{-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}',
 					Hidden:'.Hidden{display:none !important;}',
 					Invisible:'.Invisible{visibility:hidden;opacity:0;}'
 				},
@@ -928,6 +940,11 @@
 					defaultFuncs[key]();
 				}
 			}
+		},
+		promiseState = {
+			pending:0,
+			fulfilled:1,
+			rejected:2
 		};
 	
 	t.p = t.prototype = {
@@ -1015,16 +1032,35 @@
 		ajax:function(options){
 			var before = function(callback){
 					if(t.type(options.before) === 'function'){
-						options.before.apply(this,Array.prototype.slice.call(arguments,1));
+						try {
+							options.before.apply(this,Array.prototype.slice.call(arguments,1));
+						} catch(ex) {
+							console.log(new Error('Could not execute before function.'));
+						}
 					}
 					
 					callback();
 				},
-				complete = ((options && options.complete) || function(){});
+				submit = function(options,callback){
+					try {
+						helpFuncs.ajaxSend(options,callback);
+					} catch(ex){
+						console.log(new Error('Could not execute ajax function.'));
+					}
+				},
+				complete = function(){
+					if(t.type(options.before) === 'function'){
+						try {
+							options.complete(this,Array.prototype.slice.call(arguments,1));
+						} catch(ex){
+							console.log(new Error('Could not execute complete function.'));
+						}
+					}
+				};
 				
 			before(function(){
-				helpFuncs.ajaxSend(options,function(response){
-					options.complete(response);
+				submit(options,function(response){
+					complete(response);
 				});
 			});
 		},
