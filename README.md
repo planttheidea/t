@@ -26,7 +26,9 @@ Simple in description, but huge in usage:
 
 <h3>What are the functions?</h3>
 
-Glad you asked. First, the object methods:
+Glad you asked. 
+
+<h3>The object methods:</h3>
 
 addClass()
   - adds a class to each element in object
@@ -275,7 +277,7 @@ width()
     - t(selector).width(100)
     - var wt = t(selector).width()
   
-<h3>And now, the T methods:</h3>
+<h3>The t methods:</h3>
 
 ajax()
   - send AJAX requests
