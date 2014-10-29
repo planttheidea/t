@@ -1,17 +1,17 @@
-t.js Javascipt Library
+<h1>t.js Javascipt Library</h1>
 
 This is my feeble attempt at creating a lightweight JS library that is based on modern web standards. It
 is not intended to be a monolithic "make IE6 work like Chrome" solution, and it damned sure isn't ready for
 production usage. Also, forgive the rudimentary nature of this readme, I'm new to github.
 
-What makes it different than jQuery?
+<h3>What makes it different than jQuery?</h3>
 
 Besides its completely experimental nature at this time? It's light, simple, and tries to focus on commonly-used
 methods. There are a lot of similarities because, by nature, we want to accomplish a lot of the same things. width()
 will give you the width, on() will add an event listener ... but there are subtle differences, and some additions
 I think jQuery lacks.
 
-What are the differences?
+<h3>What are the differences?</h3>
 
 Simple in description, but huge in usage:
   - instead of $, you use t (obvious, but had to be said)
@@ -24,7 +24,7 @@ Simple in description, but huge in usage:
   - Feature support testing capabilities
   - More? It's all I can remember right now
 
-What are the functions?
+<h3>What are the functions?</h3>
 
 Glad you asked. First, the object methods:
 
@@ -275,7 +275,7 @@ width()
     - t(selector).width(100)
     - var wt = t(selector).width()
   
-And now, the T methods:
+<h3>And now, the T methods:</h3>
 
 ajax()
   - send AJAX requests
