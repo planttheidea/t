@@ -37,7 +37,7 @@
 			})()
 		}
 		helpFuncs = {
-			ajaxType:function(method,url,sync,local,headers){
+			ajaxType:function(method,url,sync,crossDomain,headers){
 				var xhr;
 					
 				if(!helpAttrs.ajaxActiveX){
@@ -53,7 +53,7 @@
 					
 					xhr.open(method,url,sync);
 				} else {
-					if(!local){
+					if(!crossDomain){
 						xhr = new XDomainRequest();
 						xhr.open(method,url);
 					} else {
