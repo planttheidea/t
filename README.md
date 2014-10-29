@@ -9,11 +9,11 @@ production usage. Also, forgive the rudimentary nature of this readme, I'm new t
 Besides its completely experimental nature at this time? It's light, simple, and tries to focus on commonly-used
 methods. There are a lot of similarities because, by nature, we want to accomplish a lot of the same things. width()
 will give you the width, on() will add an event listener ... but there are subtle differences, and some additions
-I think jQuery lacks. It is also less than 19kB minified, and 6kB minified + gzipped.
+I think jQuery lacks.
 
 <h3>What are the differences?</h3>
 
-Simple in description, but huge in usage:
+Currently:
   - instead of $, you use t (obvious, but had to be said)
   - the "this" used is the original object, not the element (no need to re-wrap the object)
   - for methods that return a value (like .text()), an array of values based on each element in the object is returned
@@ -22,7 +22,11 @@ Simple in description, but huge in usage:
   - Publish / Subscribe capabilities
   - CSS Stylesheet generation capabilities
   - Feature support testing capabilities
-  - More? It's all I can remember right now
+  - Shims for ES6 features not supported in all modern browsers
+
+Future:
+  - Promises (currently only the shim is included)
+  - Animation
 
 <h3>What are the functions?</h3>
 
