@@ -9,7 +9,7 @@ production usage. Also, forgive the rudimentary nature of this readme, I'm new t
 Besides its completely experimental nature at this time? It's light, simple, and tries to focus on commonly-used
 methods. There are a lot of similarities because, by nature, we want to accomplish a lot of the same things. width()
 will give you the width, on() will add an event listener ... but there are subtle differences, and some additions
-I think jQuery lacks.
+I think jQuery lacks. It is also less than 19kB minified, and 6kB minified + gzipped.
 
 <h3>What are the differences?</h3>
 
