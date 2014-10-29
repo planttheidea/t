@@ -301,7 +301,7 @@
 			}
 		},
 		pubsub = (function(){
-			var topics = {},
+			var actions = {},
 				IDs = {};
 				
 			function prv_getID(idObj){
@@ -312,26 +312,26 @@
 				var subscribers,
 					len;
 				
-				if(!topics[publishObj.topic]){
+				if(!actions[publishObj.action]){
 					return false;
 				}
 				
-				subscribers = topics[publishObj.topic];
+				subscribers = actions[publishObj.action];
 				len = (subscribers ? subscribers.length : 0);
 					
 				while(len--){
-					subscribers[len].func(publishObj.topic,publishObj.data);
+					subscribers[len].func(publishObj.action,publishObj.data);
 				}
 			}
 			
 			function prv_unsubscribe(unsubscribeObj){
 				if(unsubscribeObj.token > 0){
-					for(var m in topics){
-						if(topics[m]){
-							for (var i = topics[m].length; i--;) {			
+					for(var m in actions){
+						if(actions[m]){
+							for (var i = actions[m].length; i--;) {			
 								if(topics[m][i].token === unsubscribeObj.token){7
 									IDs[unsubscribeObj.name] = undefined;
-									topics[m].splice(i,1);
+									actions[m].splice(i,1);
 									return 0;
 								}
 							}
@@ -351,14 +351,14 @@
 					prv_unsubscribe(subscribeObj.name);
 				}
 				
-				if(!topics[subscribeObj.topic]){
-					topics[subscribeObj.topic] = [];
+				if(!actions[subscribeObj.action]){
+					actions[subscribeObj.action] = [];
 					exists = false;
 				}
 				
 				IDs[subscribeObj.name] = subscribeObj.token = (++pid);
 				
-				topics[subscribeObj.topic].push({
+				actions[subscribeObj.action].push({
 					token:subscribeObj.token,
 					func:subscribeObj.fn
 				});
@@ -749,6 +749,7 @@
 		css = (function(){
 			var css = {
 					allNodes:'*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;letter-spacing:1px;font:inherit;}',
+					NoSelect:'.NoSelect{-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;',
 					Hidden:'.Hidden{display:none !important;}',
 					Invisible:'.Invisible{visibility:hidden;opacity:0;}'
 				},
@@ -913,7 +914,7 @@
 		}
 		
 		this.length = els.length;
-		this.originalObj = original || selector;
+		this.originalObj = original || this;
 		this.selector = selector;
 		this.version = '0.1.0';
 		this.name = 't.js JavaScript Library';
@@ -1112,7 +1113,7 @@
 				});
 			}
 			
-			return t(helpFuncs.mergeArray(childrenArray),self);
+			return t(helpFuncs.mergeArray(childrenArray),self.originalObj);
 		},
 		data:function(dataKeys,val){
 			var self = this;						
@@ -1147,7 +1148,21 @@
 				return self.dataObj;
 			}
 		},
-		eq:function(i){
+		dispatch:function(eventName){
+			var ev;
+			
+			if(helpFuncs.eventSupported(eventName)){
+				ev = document.createEvents('HTMLEvents');
+				ev.initEvent(eventName,true,false);
+			} else {
+				ev = supportBasedFuncs.CustomEvent(eventName,data);
+			}
+			
+			return this.each(function(el){
+				el.dispatchEvent(ev);
+			});
+		},
+		index:function(i){
 			var self = this;						
 			
 			return t(self[i],self);
@@ -1211,7 +1226,7 @@
 			
 			filterArray = Array.prototype.filter.call(this,func);			
 			
-			return t(helpFuncs.mergeArray(filterArray),self);
+			return t(helpFuncs.mergeArray(filterArray),self.originalObj);
 		},
 		find:function(selector){
 			var self = this,
@@ -1226,13 +1241,10 @@
 			});
 			
 			if(findArray.length > 0){
-				return t(helpFuncs.mergeArray(findArray),self);
+				return t(helpFuncs.mergeArray(findArray),self.originalObj);
 			} else {
 				return undefined;
 			}
-		},
-		get:function(i){
-			return this[i];
 		},
 		hasClass:function(cls){
 			return this.mapOne(function(el){
@@ -1292,8 +1304,12 @@
 		},
 		id:function(id){
 			if(t.type(id) !== 'undefined'){
-				return this.each(function(el){
-					el.id = text.trim();
+				return this.each(function(el,i){
+					if(i > 0){
+						el.id = text.trim() + i;
+					} else {
+						el.id = text.trim();
+					}
 				});
 			} else {
 				return this.mapOne(function(el){
@@ -1309,7 +1325,10 @@
 				nextArray.push(el.nextSibling);
 			});
 			
-			return t(helpFuncs.mergeArray(nextArray),self);
+			return t(helpFuncs.mergeArray(nextArray),self.originalObj);
+		},
+		node:function(i){
+			return this[i];
 		},
 		not:function(fn){
 			var self = this,
@@ -1462,7 +1481,7 @@
 				parentArray.push(el.parentNode);
 			});
 			
-			return t(helpFuncs.mergeArray(parentArray),self);
+			return t(helpFuncs.mergeArray(parentArray),self.originalObj);
 		},
 		position:function(){
 			return this.mapOne(function(el,i){
@@ -1504,11 +1523,19 @@
 					}
 				});
 			} else if(t.type(prop) === 'string'){
-				return this.each(function(el){
-					if(el.hasOwnProperty(key)){
-						el[prop] = val;
-					}
-				});
+				if(T.type(val) === 'undefined'){
+					return this.mapOne(function(el){
+						if(el.hasOwnProperty(key)){
+							return el[key];
+						}
+					});
+				} else {
+					return this.each(function(el){
+						if(el.hasOwnProperty(key)){
+							el[prop] = val;
+						}
+					});
+				}
 			} else {
 				return;
 			}
@@ -1522,11 +1549,17 @@
 		removeClass:function(cls){
 			var clsArray = cls.split(' ');
 			
-			return this.each(function(el){
-				for(var i = clsArray.length; i--;){
-					supportBasedFuncs.removeClass(el,clsArray[i]);
-				}
-			});
+			if(T.type(cls) !== 'undefined'){
+				return this.each(function(el){
+					for(var i = clsArray.length; i--;){
+						supportBasedFuncs.removeClass(el,clsArray[i]);
+					}
+				});
+			} else {
+				return this.each(function(el){
+					el.className = '';
+				});
+			}
 		},
 		show:function(){
 			return removeClass('Hidden');
@@ -1539,7 +1572,7 @@
 				siblingArray.push(helpFuncs.testSibling((el.parentNode || {}).firstChild,el));
 			});
 			
-			return t(helpFuncs.mergeArray(siblingArray),self);
+			return t(helpFuncs.mergeArray(siblingArray),self.original);
 		},
 		style:function(styles,val){
 			var self = this;
@@ -1629,22 +1662,10 @@
 				});
 			}
 		},
-		trigger:function(eventName){
-			var ev;
-			
-			if(helpFuncs.eventSupported(eventName)){
-				ev = document.createEvents('HTMLEvents');
-				ev.initEvent(eventName,true,false);
-			} else {
-				ev = supportBasedFuncs.CustomEvent(eventName,data);
-			}
-			
-			return this.each(function(el){
-				el.dispatchEvent(ev);
-			});
-		},
 		unselectable:function(){
-			return this.each(function(el){
+			var self = this;
+			
+			return this.addClass('NoSelect').each(function(el){
 				helpFuncs.unselectable(el);
 			});
 		},
