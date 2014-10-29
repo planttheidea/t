@@ -1036,48 +1036,65 @@
 		},
 		attribute:function(attrs,val){
 			var self = this;
-									
-			if(t.type(attrs) === 'string'){
-				switch(t.type(val)){
-					case 'undefined':
-						return self.mapOne(function(el){
-							return el.getAttribute(attrs);
-						});
-						break;
-					case 'boolean':
-						return self.each(function(el){
-							el[attrs] = val;
-						});
-						break;
-					default:
-						return self.each(function(el){
-							el.setAttribute(attrs,val);
-						});
-						break;
-				}
-			} else if(t.type(attrs) === 'object'){							
-				return self.each(function(el){
-					for(var key in attrs){
-						if(attrs.hasOwnProperty(key)){
-							if(t.type(attrs[key]) === 'boolean'){
-								el[key] = attrs[key];
-							} else {
-								el.setAttribute(key,attrs[key]);
+			
+			switch(t.type(attrs)){
+				case 'string':
+					switch(t.type(val)){
+						case 'undefined':
+							return self.mapOne(function(el){
+								return el.getAttribute(attrs);
+							});
+							break;
+						case 'boolean':
+							return self.each(function(el){
+								el[attrs] = val;
+							});
+							break;
+						default:
+							return self.each(function(el){
+								el.setAttribute(attrs,val);
+							});
+							break;
+					}
+					break;
+				case 'object':
+					return self.each(function(el){
+						for(var key in attrs){
+							if(attrs.hasOwnProperty(key)){
+								if(t.type(attrs[key]) === 'boolean'){
+									el[key] = attrs[key];
+								} else {
+									el.setAttribute(key,attrs[key]);
+								}
 							}
 						}
-					}
-				});
-			} else {
-				return self.mapOne(function(el){
-					var attrObj = {};
-					
-					for(var i = 0, attrs = el.attributes, len = attrs.length; i < len; i++){
-						attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
-					}
-					
-					
-					return attrObj;
-				});
+					});
+					break;
+				case 'array':
+					return self.mapOne(function(el){
+						var attrObj = {},
+							tempVal;
+						
+						for(var i = 0, len = attrs.length; i < len; i++){
+							attrObj[attrs[i]] = el.getAttribute(attrs[i])
+						}
+						
+						return attrObj;
+					});
+					break;
+					break;
+				default:
+					return self.mapOne(function(el){
+						var attrObj = {};
+						
+						for(var i = 0, attrs = el.attributes, len = attrs.length; i < len; i++){
+							attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+						}
+						
+						
+						return attrObj;
+					});
+					break;
 			}
 		},
 		before:function(html){
