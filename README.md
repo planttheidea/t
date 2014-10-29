@@ -60,6 +60,7 @@ t(selector).attribute({
   for:'someForm',
   draggable:false
 });
+var attrs = t(selector).attribute(['for','disabled']);
 var formFor = t(selector).attribute('for');
 ```
   
