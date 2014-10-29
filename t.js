@@ -164,6 +164,64 @@
 				
 				return isSupported;
 			},
+			filterObj:function(obj,fn){
+				var filterArray = [],
+					func;
+									
+				if(t.type(fn) === 'string'){														
+					switch(fn.charAt(0)){
+						case '#':
+							func = function(el){										
+								return (el.id === fn.substr(1));
+							};
+							break;
+						case '.':
+							func = function(el){
+								return supportBasedFuncs.hasClass(el,fn.substr(1));
+							};
+							break;
+						case ':':
+							switch(fn){
+								case ':hidden':
+									func = function(el){
+										if(!helpFuncs.visible(el)){
+											return t(el);
+										}
+									};
+									break;
+								case ':visible':
+									func = function(el){
+										if(helpFuncs.visible(el)){
+											return t(el);
+										}
+									};
+									break;
+								default:
+									func = function(el){
+										try {
+											var matches = el.parentNode.querySelectorAll(fn);
+										
+											for(var i = matches.length; i--;){
+												if(el === matches[i]){
+													return matches[i];
+												}
+											}
+										} catch(e){
+											console.log('Invalid pseudo-selector attempted, aborting.');
+											return obj;
+										}
+									};
+									break;
+							}
+							break;
+						default:
+							func = fn;
+							break;
+					}
+					
+					return Array.prototype.filter.call(obj,func);
+				}
+			},
 			getNestedObjVals:function(obj,keys,del,deep){
 				var valArray = [];
 					
@@ -1184,64 +1242,8 @@
 			
 			return t(self[i],self);
 		},
-		filter:function(fn){	
-			var self = this,
-				filterArray = [],
-				func;
-								
-			if(t.type(fn) === 'string'){														
-				switch(fn.charAt(0)){
-					case '#':
-						func = function(el){										
-							return (el.id === fn.substr(1));
-						};
-						break;
-					case '.':
-						func = function(el){
-							return supportBasedFuncs.hasClass(el,fn.substr(1));
-						};
-						break;
-					case ':':
-						switch(fn){
-							case ':hidden':
-								func = function(el){
-									if(!helpFuncs.visible(el)){
-										return t(el);
-									}
-								};
-								break;
-							case ':visible':
-								func = function(el){
-									if(helpFuncs.visible(el)){
-										return t(el);
-									}
-								};
-								break;
-							default:
-								func = function(el){
-									try {
-										var matches = el.parentNode.querySelectorAll(fn);
-									
-										for(var i = matches.length; i--;){
-											if(el === matches[i]){
-												return matches[i];
-											}
-										}
-									} catch(e){
-										console.log('Invalid pseudo-selector attempted, aborting.');
-										return self;
-									}
-								};
-								break;
-						}
-						break;
-					default:
-						func = fn;
-						break;
-				}
-			}
-			
-			filterArray = Array.prototype.filter.call(this,func);			
+		filter:function(fn){			
+			filterArray = helpFuncs.filterObj(this,fn);		
 			
 			return t(helpFuncs.mergeArray(filterArray),self.originalObj);
 		},
@@ -1490,17 +1492,27 @@
 		original:function(){
 			return this.originalObj;
 		},
-		parent:function(){
+		parent:function(selector){
 			var self = this,
 				parentArray = [];
 			
-			self.each(function(el){
-				parentArray.push(el.parentNode);
-			});
+			if(t.type(selector) !== 'undefined'){
+				self.each(function(el,i){
+					var parent = el.parentNode;
+					
+					if(helpFuncs.filterObj(t(parent),selector).length > 0){
+						parentArray.push(parent);
+					}
+				});
+			} else {
+				self.each(function(el){
+					parentArray.push(el.parentNode);
+				});
+			}
 			
 			return t(helpFuncs.mergeArray(parentArray),self.originalObj);
 		},
-		position:function(){
+		position:function(){boston
 			return this.mapOne(function(el,i){
 				var rect = el.getBoundingClientRect();
 							
