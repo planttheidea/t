@@ -210,8 +210,10 @@ t(selector).children().original();
 
 **parent()**
   - returns an object of each element's parent nodes
+    - if selector is passed, only returns the parent object that matches selector
 ```html
 t(selector).parent();
+t(selector).parent('.SomeParent');
 ```
   
 **position()**
