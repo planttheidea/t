@@ -1686,6 +1686,9 @@
 					document.body.removeChild(transform);
 					
 					return has3d;
+				})(),
+				Promise = (function(){
+					return ((helpFuncs.testType(Promise) !== 'undefined') && (Promise.toString().indexOf('[native code]') > -1));
 				})();
 				
 			function prv_getAnimation(){
@@ -1768,6 +1771,10 @@
 				return transform3d;
 			}
 			
+			function prv_getPromise(){
+				return Promise;
+			}
+			
 			function pub_getAnimation(){
 				return prv_getAnimation();
 			}
@@ -1848,6 +1855,10 @@
 				return prv_getTransform3d();
 			}
 			
+			function pub_getPromise(){
+				return prv_getPromise();
+			}
+			
 			return {
 				animation:pub_getAnimation,
 				audioMP3:pub_getAudioMP3,
@@ -1863,6 +1874,7 @@
 				localStorage:pub_getLocalStorage,
 				mediaQueries:pub_getMediaQueries,
 				pageYOffset:pub_getPageYOffset,
+				Promise:pub_getPromise,
 				svg:pub_getSvg,
 				touch:pub_getTouch,
 				transform3d:pub_getTransform3d,
@@ -2194,6 +2206,15 @@
 		},
 		merge:function(arr){
 			return helpfFuncs.mergeArray(arr);
+		},
+		promise:function(fn,fail){
+			return new Promise(function(resolve,reject){
+				try {
+					return fn(resolve);
+				} catch(ex) {
+					return fail(reject);
+				}
+			});
 		},
 		publish:function(obj){
 			return pubsub.publish(obj);
