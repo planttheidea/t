@@ -2201,7 +2201,7 @@
 		defaults:function(options){
 			return setDefaults(options);
 		},
-		equals:function(obj1,obj2,orderMatters){
+		identical:function(obj1,obj2,orderMatters){
 			return helpFuncs.objectEqual(obj1,obj2,orderMatters);
 		},
 		merge:function(arr){
@@ -2423,7 +2423,19 @@
 			});
 		},
 		equals:function(obj){
-			return helpFuncs.objectEqual(this,obj);
+			var same = true;
+			
+			if(!obj || this.length !== obj.length){
+				same = false;
+			}
+			
+			for(var i = this.length; i--;){
+				if(this[i] !== obj[i]){
+					same = false;
+				}
+			}
+			
+			return same;
 		},
 		index:function(i){
 			var self = this;						
