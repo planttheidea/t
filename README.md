@@ -25,7 +25,7 @@ Currently:
   - Shims for ES6 features not supported in all modern browsers
 
 Future:
-  - Promises (currently only the shim is included)
+  - Promises (currently only a shell of standard functionality exists, shimmed if not supported)
   - Animation
 
 <h3>What are the functions?</h3>
@@ -80,11 +80,18 @@ t(selector).before('<div>added before</div>');
 t(selector).children('.Child');
 t(selector).children();
 ```
+
+**clone()**
+  - returns a new object of elements identical to the object used
+```html
+var tClone = t(selector).clone();
+```
   
 **data()**
-  - set the internal data value for each key and value pair passed
+  - set the data value for each key and value pair passed
     - single pair can be passed as (string,value)
     - many pairs can be passed as an object
+    - sets data attributes in HTML
   - get the value for key passed (returned as array when multiple elements in object)
   - returns all stored data key and value pairs for the object (when no parameter passed)
 ```html
@@ -112,6 +119,15 @@ t(selector).dispatch('click');
 t(selector).each(function(el,i){
   console.log(el.id);
 });
+```
+
+**equals()**
+  - returns boolean value if object passed in has same element set
+```html
+var tSame = t(selector),
+    test = t(selector.equals(tSame);
+    
+// returns true
 ```
 
 **index()**
@@ -188,6 +204,12 @@ t(selector).next();
     selector passed filtered out
 ```html
 t(selector).not(':visible');
+```
+
+**node()**
+  - returns the HTML element based on index value passed in (0-based)
+```html
+t(selector).node(2)
 ```
     
 **on()**
@@ -373,6 +395,14 @@ t.ajax({
     console.log('complete');
   }
 });
+```
+
+**camelCase()**
+  - converts any string into camelCase
+```html
+var tCamelCase = t.camelCase('Conversions with spaces or-with-dashes');
+
+// returns 'conversionsWithSpacesOrWithDashes'
 ```
 
 **css()**
