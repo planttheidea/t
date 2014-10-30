@@ -422,6 +422,17 @@ t.defaults({
 });
 ```
 
+**identical()**
+  - tests if two objects are identical to one another
+    - accepts third boolean parameter for if order matters (defaults to false)
+```html
+var test1 = t.identical({a:1,b:2},{b:2,a:1}),
+    test2 = t.identical({a:1,b:2},{b:2,a:1},true),
+    test3 = t.identical({a:1,b:2},{b:2});
+
+// test1 returns true, test2 returns false, test3 returns false
+```
+
 **merge()**
   - consolidate an array into unique values
 ```html
