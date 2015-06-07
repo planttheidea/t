@@ -86,6 +86,47 @@
 
                 return f.call(el,selector);
             },
+            namespace:{
+                get:function(parent,ns){
+                    var parts = ns.split('.');
+
+                    for(var i = 0, len = parts.length; i < len; i++){
+                        parent = parent[parts[i]];
+                    }
+
+                    return parent;
+                },
+                remove:function(parent,ns){
+                    var parts = ns.split('.');
+
+                    if(parts.length !== 1){
+                        for(var i = 0, len = parts.length; i < len; i++){
+                            if(i === (len - 1)){
+                                delete parent[parts[i]];
+                            } else {
+                                parent = parent[parts[i]];
+                            }
+                        }
+                    } else {
+                        delete parent[ns]
+                    }
+                },
+                set:function(parent,ns,val){
+                    var parts = ns.split('.');
+
+                    if(parts.length !== 1){
+                        var part = parts.shift();
+
+                        if(t.is.undefined(parent[part])){
+                            parent[part] = {};
+                        }
+
+                        internal.namespace.set(parent[part],parts.join('.'),val);
+                    } else {
+                        parent[ns] = t.copy(val);
+                    }
+                }
+            },
             number:{
                 ceiling:function(num){
                     return Math.ceil(num);
@@ -179,28 +220,12 @@
                 function prv_unsubscribe(unsubscribeObj){
                     unsubscribeObj = unsubscribeObj || {};
 
-                    switch(getType(unsubscribeObj.name)){
-                        case 'string':
-                            prv_unsubscribeName(unsubscribeObj.name);
-
-                            break;
-                        case 'array':
-                            for(var i = unsubscribeObj.name.length; i--;){
-                                prv_unsubscribeName(unsubscribeObj.name[i]);
-                            }
-
-                            break;
-                        case 'undefined':
-                            for(var key in IDs){
-                                if(!persistentIDs[key]){
-                                    prv_unsubscribeName(key);
-                                }
-                            }
-
-                            break;
-                        default:
-                            throwError('Name passed is not of valid type.');
-                            break;
+                    if(t.is.string(unsubscribeObj.name)){
+                        prv_unsubscribeName(unsubscribeObj.name);
+                    } else if(t.is.array(unsubscribeObj.name)){
+                        for(var i = unsubscribeObj.name.length; i--;){
+                            prv_unsubscribeName(unsubscribeObj.name[i]);
+                        }
                     }
 
                     return this;
@@ -230,30 +255,27 @@
                  * to the topics provided
                  */
                 function prv_subscribe(subscribeObj){
-                    // throws an error if the name passed is not a string
-                    if(!t.is.string(subscribeObj.name)){
-                        throwError('Name passed is not a string.');
-                        return false;
-                    }
+                    // only subscribes if name is provided
+                    if(t.is.string(subscribeObj.name)) {
+                        // unsubscribes from topic if subscription already exists
+                        if (IDs[subscribeObj.name]) {
+                            prv_unsubscribeName(subscribeObj.name);
+                        }
 
-                    // unsubscribes from topic if subscription already exists
-                    if(IDs[subscribeObj.name]){
-                        prv_unsubscribeName(subscribeObj.name);
-                    }
+                        // assigns new ID
+                        IDs[subscribeObj.name] = (++subUid);
 
-                    // assigns new ID
-                    IDs[subscribeObj.name] = (++subUid);
+                        if (subscribeObj.persistent) {
+                            persistentIDs[subscribeObj.name] = subUid;
+                        }
 
-                    if(subscribeObj.persistent){
-                        persistentIDs[subscribeObj.name] = subUid;
-                    }
-
-                    // subscriptions called differently depending on typ
-                    if(t.is.string(subscribeObj.topic)){
-                        prv_subscribeTopic(subscribeObj.topic,subscribeObj.fn,subscribeObj.once,subscribeObj.name,IDs[subscribeObj.name]);
-                    } else if(t.is.array(subscribeObj.topic)){
-                        for(var i = subscribeObj.topic.length; i--;){
-                            prv_subscribeTopic(subscribeObj.topic[i],subscribeObj.fn,subscribeObj.once,subscribeObj.name,IDs[subscribeObj.name]);
+                        // subscriptions called differently depending on typ
+                        if (t.is.string(subscribeObj.topic)) {
+                            prv_subscribeTopic(subscribeObj.topic, subscribeObj.fn, subscribeObj.once, subscribeObj.name, IDs[subscribeObj.name]);
+                        } else if (t.is.array(subscribeObj.topic)) {
+                            for (var i = subscribeObj.topic.length; i--;) {
+                                prv_subscribeTopic(subscribeObj.topic[i], subscribeObj.fn, subscribeObj.once, subscribeObj.name, IDs[subscribeObj.name]);
+                            }
                         }
                     }
 
@@ -394,7 +416,7 @@
             var results = [];
 
             for(var i = 0; i < this.length; i++){
-                results.push(callback.call(this,this[i],i));
+                results[results.length] = callback.call(this,this[i],i);
             }
 
             return results;
@@ -402,7 +424,7 @@
         mapOne:function(callback){
 //                        return this.map(callback)[0];
             var m = this.map(callback);
-            return (m.length > 1 ? m : m[0]);
+            return (m.length !== 0 ? m : m[0]);
         },
         version:internal.version
     };
@@ -555,6 +577,11 @@
                 return typeof(obj) === 'object' && 'setInterval' in obj;
             }
         }
+    });
+
+    t.extend({
+        _data:{},
+        _events:{}
     });
 
     t.extend({
@@ -1189,15 +1216,22 @@
                 return this.each(function(el){
                     var self = this;
 
-                    if(!t.is.object(self.events)){
-                        self.events = {};
+                    if(!t.is.object(this.events)){
+                        this.events = {};
+                    }
+
+                    if(!t.is.object(t._events[this.uid])){
+                        t._events[this.uid] = {};
                     }
 
                     for(var key in obj){
-                        self.events[key] = obj[key];
+                        var event = key.split('.')[0];
+
+                        internal.namespace.set(this.events,key,obj[key]);
+                        internal.namespace.set(t._events[this.uid],key,obj[key]);
 
                         if(target){
-                            el.addEventListener(key,function(e){
+                            el.addEventListener(event,function(e){
                                 var children = el.querySelectorAll(target);
 
                                 if(children.length){
@@ -1209,7 +1243,7 @@
                                 }
                             },false);
                         } else {
-                            el.addEventListener(key,obj[key],false);
+                            el.addEventListener(event,obj[key],false);
                         }
                     }
                 });
@@ -1217,26 +1251,29 @@
                 return this;
             }
         },
-        off:function(arr){
-            if(t.is.array(arr)){
+        off:function(events){
+            if(t.is.array(events)){
                 return this.each(function(el){
-                    var self = this;
+                    for(var i = events.length; i--;){
+                        var key = events[i].split('.')[0],
+                            fn = internal.namespace.get(t._events[this.uid],events);
 
-                    for(var i = arr.length; i--;){
-                        if(self.events[arr[i]]){
-                            el.removeEventListener(key,self.events[arr[i]],false);
+                        if(!t.is.undefined(fn)){
+                            el.removeEventListener(key,fn,false);
+                            internal.namespace.remove(t._events[this.uid],events);
+                            internal.namespace.remove(this.events,events);
                         }
                     }
                 });
-            } else if(t.is.string(arr)){
+            } else if(t.is.string(events)){
                 return this.each(function(el){
-                    var self = this;
+                    var key = events.split('.')[0],
+                        fn = internal.namespace.get(t._events[this.uid],events);
 
-                    if(self.events[arr]){
-                        el.removeEventListener(arr,self.events[arr],false);
-                        delete self.events[arr];
-
-                        console.log(self.events);
+                    if(!t.is.undefined(fn)){
+                        el.removeEventListener(key,fn,false);
+                        internal.namespace.remove(t._events[this.uid],events);
+                        internal.namespace.remove(this.events,events);
                     }
                 });
             } else {
@@ -1290,16 +1327,20 @@
             }
         },
         remove:function(){
-            for(var i = this.length; i--;){
-                var el = this[i];
-
-                el.parentNode.removeChild(el);
-                delete this[i];
+            if(this.events){
+                delete this.events;
             }
 
-            this.length = 0;
+            if(t._events[this.uid]){
+                delete t._events[this.uid];
+            }
 
-            return this;
+            return this.each(function(el,i){
+                el.parentNode.removeChild(el);
+
+                delete this[i];
+                this.length--;
+            });
         },
         removeClass:(function(){
             if(t.supports.classList){
@@ -1350,6 +1391,57 @@
             }
 
             return t(siblingArray,this.original);
+        },
+        style:function(styles,val){
+            if(t.is.string(styles)){
+                if(t.is.undefined(val)){
+                    return this.mapOne(function(el){
+                        return el.style[styles] || getComputedStyle(el)[styles];
+                    });
+                } else {
+                    return this.each(function(el){
+                        el.style[keu] = val;
+                    });
+                }
+            } else if(t.is.object(styles)){
+                if(t.is.array(styles)){
+                    return this.mapOne(function(el){
+                        var ret = {};
+                        
+                        for(var i = 0, len = styles.length; i < len; i++){
+                            var style = el.style[styles[i]] || getComputedStyle(el)[styles[i]];
+                            
+                            if(!t.is.nan(parseFloat(style))){
+                                style = internal.number.round(parseFloat(style));
+                            }
+
+                            ret[styles[i]] = style;
+                        }
+                        
+                        return ret;
+                    });
+                } else {
+                    return this.each(function(el){
+                        for(var key in styles){
+                            el.style[key] = styles[key];
+                        }
+                    });
+                }
+            } else if(t.is.undefined(styles)){
+                return this.mapOne(function(el){
+                    var stylesObj = {},
+                        allStyles = getComputedStyle(el);
+
+                    for(var i = 0, len = allStyles.length; i < len; i++){
+                        stylesObj[allStyles[i]] = el.style[allStyles[i]] || allStyles[allStyles[i]];
+                    }
+
+
+                    return stylesObj;
+                });
+            }
+            
+            return this;
         },
         text:function(txt){
             if(!t.is.undefined(txt)){
