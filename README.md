@@ -11,10 +11,6 @@ methods. There are a lot of similarities because, by nature, we want to accompli
 will give you the width, on() will add an event listener ... but there are subtle differences, and some additions
 I think jQuery lacks.
 
-## Notice
-
-I haven't touched this library in a long time, and I'm rewriting it from the ground-up. A sneak peak is available with the t-next-gen.js files, but it is still very young.
-
 <h3>What are the differences?</h3>
 
 Currently:
