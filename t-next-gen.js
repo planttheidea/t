@@ -277,12 +277,12 @@
             },
             supports:{
                 css3:{
-                    property:function(prefixArray){
+                    property:function(propArray){
                         try {
                             var support = false;
 
-                            for(var i = prefixArray.length; i--;){
-                                if(prefixArray[i] in testElement.document.style){
+                            for(var i = propArray.length; i--;){
+                                if(propArray[i] in (document.documentElement || document.body).style){
                                     support = true;
                                     break;
                                 }
@@ -690,11 +690,11 @@
             applicationCache:!!(window.applicationCache),
             addEventListener:(function(){
                 var div = document.createElement('div');
-                return div.addEventListener;
+                return !!div.addEventListener;
             })(),
             audio:(function(){
                 var audio = document.createElement('audio');
-                return audio.canPlayType;
+                return !!audio.canPlayType;
             })(),
             autocomplete:internal.supports.html5.attribute('autocomplete'),
             autofocus:internal.supports.html5.attribute('autofocus'),
@@ -721,7 +721,7 @@
 
                 return animation;
             })(),
-            cssCalc:internal.supports.css3.value('width','calc(100% - 10px)'),
+            cssCalc:internal.supports.css3.value('width','calc(1% - 1px)'),
             cssColumn:internal.supports.css3.property(['columnCount','webkitColumnCount','MozColumnCount']),
             cssReflection:internal.supports.css3.property(['boxReflect','WebkitBoxRefect']),
             customEvent:!!(window.CustomEvent),
@@ -759,10 +759,10 @@
             linearGradient:(function(){
                 try {
                     var valueArray = ['linear-gradient','-webkit-linear-gradient','-moz-linear-gradient','-o-linear-gradient'],
-                            support = false;
+                        support = false;
 
                     for(var i = valueArray.length; i--;){
-                        if(newCss3Value('background',valueArray[i] + '(-45deg,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 100%)')){
+                        if(internal.supports.css3.value('background',valueArray[i] + '(-45deg,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 100%)')){
                             return true;
                         }
                     }
@@ -779,21 +779,22 @@
             max:internal.supports.html5.attribute('max'),
             mediaQueries:(function(){
                 var mqTest = document.createElement('div'),
-                        mqStyle = document.createElement('style'),
-                        support = false;
+                    mqStyle = document.createElement('style'),
+                    body = document.body,
+                    support = false;
 
                 mqTest.id = 'MediaTest';
-                document.body.appendChild(mqTest);
+                body.appendChild(mqTest);
 
                 mqStyle.textContent = '@media screen and (min-width:1px){#MediaTest{position:absolute;}}';
-                document.body.appendChild(mqStyle);
+                body.appendChild(mqStyle);
 
                 if(window.getComputedStyle && window.getComputedStyle(mqTest).position == 'absolute') {
                     support = true;
                 }
 
-                document.body.removeChild(mqTest);
-                document.body.removeChild(mqStyle);
+                body.removeChild(mqTest);
+                body.removeChild(mqStyle);
 
                 return support;
             })(),
@@ -874,21 +875,17 @@
             touch:!!(('ontouchstart' in document.documentElement) || window.navigator.msMaxTouchPoints),
             video:(function(){
                 var video = document.createElement('video');
-                return video.canPlayType;
+                return !!video.canPlayType;
             })(),
             webgl:(function(){
+                var canvas = document.createElement('canvas'),
+                    ctx,
+                    exts;
+
                 try {
-                    try {
-                        testElement.canvas.getContext('webgl');
-                        return true;
-                    } catch(ex) {
-                        try {
-                            testElement.getContext('experimental-webgl');
-                            return true;
-                        } catch(ex) {
-                            return false;
-                        }
-                    }
+                    ctx = canvas.getContext('webgl') || ctx.getContext('experimental-webgl');
+                    exts = ctx.getSupportedExtensions();
+                    return true;
                 } catch(ex) {
                     return false;
                 }
