@@ -155,16 +155,28 @@ t(selector).next();
     
 **on()**
   - add event listener to each element in object
-    - can do event delegation
+    - supports event delegation
+    - supports period-separated namespacing
 ```html
-t(selector).on('click',eventHandler);
-t(selector).on('click',eventHandler,'.DelegatedSelector');
+t(selector).on({
+  click:eventHandler
+});
+
+t(selector).on({
+  click:eventHandler2
+},'.delegated-selector');
+
+t(selector).on({
+  'click.with.name.space':eventHandler3
+});
 ```
 
 **off()**
   - remove event listener to each element in object
+    - supports period-separated namespacing
 ```html
 t(selector).off('click');
+t(selector).off('click.with.name.space');
 ```
 
 **parent()**
