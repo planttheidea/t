@@ -634,9 +634,7 @@
                 ret2;
 
             if(t.is.object(obj)){
-                if(t.is.null(obj)){
-                    return obj;
-                }
+                ret = {};
 
                 if(t.is.array(obj)){
                     ret = [];
@@ -650,14 +648,12 @@
 
                         ret[ret.length] = ret2;
                     }
-                } else if(t.is.date(obj) || t.is.function(obj)){
+                } else if(t.is.function(obj) || t.is.date(obj)){
                     ret = obj;
                 } else {
-                    ret = {};
-
-                    for(i in obj){
-                        if(obj.hasOwnProperty(i)){
-                            if(t.is.object(obj[i])){
+                    for (i in obj) {
+                        if (obj.hasOwnProperty(i)) {
+                            if (t.is.object(obj[i])) {
                                 ret2 = t.copy(obj[i]);
                             } else {
                                 ret2 = obj[i];
@@ -724,7 +720,15 @@
             cssCalc:internal.supports.css3.value('width','calc(1% - 1px)'),
             cssColumn:internal.supports.css3.property(['columnCount','webkitColumnCount','MozColumnCount']),
             cssReflection:internal.supports.css3.property(['boxReflect','WebkitBoxRefect']),
+            contenteditable:(function(){
+                var div = document.createElement('div');
+                return !!('contenteditable' in div)
+            })(),
             customEvent:!!(window.CustomEvent),
+            dragAndDrop:(function(){
+                var div = document.createElement('div');
+                return !!('draggable' in div)
+            })(),
             geolocation:!!('geolocation' in navigator),
             getBoundingClientRect:!!((document.documentElement || document.body).getBoundingClientRect),
             getElementsByClassName:!!(document.getElementsByClassName),
