@@ -24,13 +24,12 @@ Currently:
     (jQuery only retrieves the value of the first element in the object)
   - Additional returns in functions (describe in function definitions)
   - Publish / Subscribe capabilities
-  - CSS Stylesheet generation capabilities
   - Feature support testing capabilities
-  - Shims for ES6 features not supported in all modern browsers
 
 Future:
-  - Promises (currently only a shell of standard functionality exists, shimmed if not supported)
-  - Animation
+  - Improve / enhance ajax
+  - Add promises
+  - Add animation
 
 <h3>What are the functions?</h3>
 
@@ -85,39 +84,9 @@ t(selector).children('.Child');
 t(selector).children();
 ```
 
-**clone()**
-  - returns a new object of elements identical to the object used
-```html
-var tClone = t(selector).clone();
-```
-  
-**data()**
-  - set the data value for each key and value pair passed
-    - single pair can be passed as (string,value)
-    - many pairs can be passed as an object
-    - sets data attributes in HTML
-  - get the value for key passed (returned as array when multiple elements in object)
-  - returns all stored data key and value pairs for the object (when no parameter passed)
-```html
- t(selector).data('test',10);
- t(selector).data({
-   test:10,
-   test2:'blah'
- });
- var test = t(selector).data('test');
- var data = t(selector).data();
-```
-  
-**dispatch()**
-  - dispatches event associated to each element in object
-    - can be namespaced
-```html
-t(selector).dispatch('click');
-```
-
 **each()**
-  - iterates over every element in object
-    - parameters for callback are the element and the index
+  - iterates over every element in object and executes function passed
+    - parameters for callback are the element, index, and object itself
     - "this" is still the t object
 ```html
 t(selector).each(function(el,i){
@@ -125,19 +94,16 @@ t(selector).each(function(el,i){
 });
 ```
 
-**equals()**
-  - returns boolean value if object passed in has same element set
+**element()**
+  - returns the HTML element based on index value passed in (0-based)
 ```html
-var tSame = t(selector),
-    test = t(selector.equals(tSame);
-    
-// returns true
+t(selector).node(2)
 ```
 
-**index()**
-  - returns an object based on the original object elements, filtered by index provided (0-based)
+**empty()**
+  - empties the contents of each element in object
 ```html
-t(selector).index(2);
+t(selector).empty();
 ```
 
 **filter()**
@@ -162,16 +128,6 @@ t(selector).find('.Descendant');
 ```html
 t(selector).hasClass('ClassWanted');
 ```
-  
-**height()**
-  - sets height of element based on value passed
-    - styling is done inline
-    - numbers passed are assumed to be px, but string values (percentages, auto) are accepted
-  - gets height of element as integer value (returned as array when multiple elements in object)
-```html
-t(selector).height(100);
-var ht = t(selector).height();
-```
 
 **hide()**
   - sets display property of element to "none"
@@ -187,14 +143,11 @@ t(selector).hide();
 t(selector).html('<span>new contents</span>');
 var html = t(selector).html();
 ```
-  
-**id()**
-  - sets the ID of the element based on value passed
-    - will append the index value to ID if multiple elements in object (otherwise, invalid HTML)
-  - gets the ID of the element if no value passed (returned as array when multiple elements in object)
+
+**index()**
+  - returns an object based on the original object elements, filtered by index provided (0-based)
 ```html
-t(selector).id('newID');
-var id = t(selector).id();
+t(selector).index(2);
 ```
 
 **next()**
@@ -202,24 +155,10 @@ var id = t(selector).id();
 ```html
 t(selector).next();
 ```
-
-**not()**
-  - opposite of filter(), returns an object based on the original object elements, with elements matching the
-    selector passed filtered out
-```html
-t(selector).not(':visible');
-```
-
-**node()**
-  - returns the HTML element based on index value passed in (0-based)
-```html
-t(selector).node(2)
-```
     
 **on()**
   - add event listener to each element in object
     - can do event delegation
-    - can do namespacing
 ```html
 t(selector).on('click',eventHandler);
 t(selector).on('click',eventHandler,'.DelegatedSelector');
@@ -227,15 +166,8 @@ t(selector).on('click',eventHandler,'.DelegatedSelector');
 
 **off()**
   - remove event listener to each element in object
-    - can do namespacing
 ```html
 t(selector).off('click');
-```
-    
-**original()**
-  - returns an object that was the original object that started the chain
-```html
-t(selector).children().original();
 ```
 
 **parent()**
@@ -244,17 +176,6 @@ t(selector).children().original();
 ```html
 t(selector).parent();
 t(selector).parent('.SomeParent');
-```
-  
-**position()**
-  - returns an object of an elements position, both absolute and relative to the viewport (returned as array
-    when multiple elements exist in object)
-    - left = absolute left
-    - top = absolute top
-    - rLeft = relative left
-    - rTop = relative top
-```html
-t(selector).position().top;
 ```
 
 **prepend()**
@@ -267,20 +188,6 @@ t(selector).prepend('<h3>added at top of contents</h3>');
   - returns an object of each element's previous siblings
 ```html
 t(selector).previous();
-```
-
-**property()**
-  - sets each element's properties based on key-value pair passed
-    - for single pair, can use (string,string) or (string,boolean)
-    - for many pairs, can use object of key-value pairs
-  - gets each element's properties based on key passed (returned as array when multiple elements exist in object)
-```html
-t(selector).property('disabled',true);
-t(selector).property({
-  disabled:true,
-  checked:false
-});
-t(selector).property('checked');
 ```
 
 **remove()**
@@ -296,6 +203,12 @@ t(selector).remove();
 t(selector).removeClass('Goodbye');
 t(selector).removeClass();
 ```
+    
+**revert()**
+  - returns an object that was the original object that started the chain
+```html
+t(selector).children().original();
+```
 
 **show()**
   - removes display property of element to "none"
@@ -306,34 +219,10 @@ t(selector).show();
     
 **siblings()**
   - returns an object of elements that are siblings of each element in original object
+    - if selector passed, filters siblings returned by if matching selector
 ```html
 t(selector).siblings();
-```
-
-**style()**
-  - Can:
-    - set value of style for each key-value pair passed
-      - for single style, (string,string) or (string,number) can be passed
-      - for multiple styles, object can be passed
-    - get each element's style values (returned as array when multiple elements exist in object)
-      - if array is passed, gets all styles matching items in that array
-      - if string is passed, gets single style
-      - if no value is passed, gets all computed styles
-```html
-t(selector).style('background-color','red');
-t(selector).style({
-  backgroundColor:'red',
-  margin:'0 auto'
-});
-t(selector).style('margin-left');
-var styles = t(selector).style(['display','height']);
-var styles = t(selector).style();
-```
-
-**tagname()**
-  - gets the tagname for each element (returned as array when multiple elements exist in object)
-```html
-tag = t(selector).tagname();
+t(selector).siblings('.someClass');
 ```
   
 **text()**
@@ -343,14 +232,6 @@ tag = t(selector).tagname();
 t(selector).text('hello');
 var txt = t(selector).text();
 ```
-  
-**unselectable()**
-  - sets each element in object to be unable to be selected (highlighted) by mouse
-    - adds NoSelect class from generated CSS Stylesheet (for non-IE browsers)
-    - sets unselectable attribute to "on" (for IE)
-```html
-t(selector).unselectable();
-```
 
 **value()**
   - sets the value for each element based on value passed
@@ -358,16 +239,6 @@ t(selector).unselectable();
 ```html
 t(selector).value('newVal');
 var val = t(selector).val();
-```
-  
-**width()**
-  - sets width of element based on value passed
-    - styling is done inline
-    - numbers passed are assumed to be px, but string values (percentages, auto) are accepted
-  - gets width of element as integer value (returned as array when multiple elements in object)
-```html
-t(selector).width(100);
-var wt = t(selector).width();
 ```
   
 <h3>The t methods:</h3>
@@ -381,18 +252,13 @@ var wt = t(selector).width();
 t.ajax({
   url:'test.php',
   type:'POST',
-  cache:false,
-  sync:true,
   data:{
     test:'val'
-  },
-  before:function(){
-    console.log('before');
   },
   success:function(response){
     console.log(response);
   },
-  failure:function(error){
+  error:function(error){
     console.log(error);
   },
   complete:function(){
@@ -401,47 +267,30 @@ t.ajax({
 });
 ```
 
-**camelCase()**
-  - converts any string into camelCase
-```html
-var tCamelCase = t.camelCase('Conversions with spaces or-with-dashes');
-
-// returns 'conversionsWithSpacesOrWithDashes'
+**is()**
+  - Test if object matches specific type or value, returns boolean
 ```
-
-**css()**
-  - add, remove, or clear rules on the generated CSS Stylesheet
-```html
-t.css('add',{
-  NewStyle:'.NewStyle { background-color:red; }'
-});
-t.css('remove','NewStyle');
+t.is.boolean(false); // true
 ```
-
-**defaults()**
-  - set the defaults (right now just for CSS and AJAX)
-```html
-t.defaults({
-  useCss:true
-});
-```
-
-**identical()**
-  - tests if two objects are identical to one another
-    - accepts third boolean parameter for if order matters (defaults to false)
-```html
-var test1 = t.identical({a:1,b:2},{b:2,a:1}),
-    test2 = t.identical({a:1,b:2},{b:2,a:1},true),
-    test3 = t.identical({a:1,b:2},{b:2});
-
-// test1 returns true, test2 returns false, test3 returns false
-```
-
-**merge()**
-  - consolidate an array into unique values
-```html
-t.merge(arr);
-```
+  - List of methods available:
+    - array
+    - boolean
+    - date
+    - domNode
+    - equal (accepts two parameters)
+    - error
+    - function
+    - json
+    - nan
+    - null
+    - number
+    - object
+    - regexp
+    - sameType (accepts two parameters)
+    - string
+    - t
+    - undefined
+    - windowObject
 
 **publish()**
   - publish an action with data
@@ -467,17 +316,94 @@ t.subscribe({
 });
 ```
   
-**type()**
-  - get the type of item passed
-```html
-t.type('test');
-```
-  
 **unsubscribe()**
   - remove subscription from an action with data
     - value passed is the "name" you created in the subscription
 ```html
 t.unsubscribe('doSomethingWithDimensions');
 ```
+  
+<h3>The t properties:</h3>
+
+**supports**
+  - Returns boolean value if feature is supported or not
+```
+console.log(t.supports.classList); // true
+```
+  - List of properties available:
+    - applicationCache
+    - addEventListener
+    - audio
+    - autocomplete
+    - autofocus
+    - boxShadow
+    - canvas
+    - classList
+    - cssAnimation
+    - cssCalc
+    - cssColumn
+    - cssReflection
+    - contentEditable
+    - cusomEvent
+    - dragAndDrop
+    - geolocation
+    - getBoundingClientRect
+    - getElementsByClassName
+    - flexbox
+    - history
+    - hsla
+    - inputDate
+    - inputDateTime
+    - inputDateTimeLocal
+    - inputEmail
+    - inputMonth
+    - inputNumber
+    - inputRange
+    - inputSearch
+    - inputTel
+    - inputTime
+    - inputUrl
+    - inputWeek
+    - list
+    - jsson
+    - localStorage
+    - linearGradient
+    - max
+    - mediaQueries
+    - min
+    - mp3
+    - mp4
+    - mp4Audio
+    - mp4Video
+    - multiple
+    - ogg
+    - oggAudio
+    - oggVideo
+    - opacity
+    - pageOffset
+    - pattern
+    - placeholder
+    - postMessage
+    - pseudoAfter
+    - pseudoBefore
+    - pseudoFirstLetter
+    - pseudoFirstLine
+    - radialGradient
+    - required
+    - rgba
+    - sessionStorage
+    - step
+    - smil
+    - svg
+    - textShadow
+    - transform
+    - transform3d
+    - transition
+    - touch
+    - video
+    - webgl
+    - webm
+    - webSocket
+    - webSQL
 
 This is just the first draft I've been working on over the last couple of weeks, there is much more to come!
