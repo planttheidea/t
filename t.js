@@ -1,3 +1,9 @@
+/*!
+t.js JS library
+Copyright 2015 Plant The Idea Web Design All rights reserved.
+Licensed under the MIT License.
+https://github.com/planttheidea/t/blob/master/LICENSE.md
+*/
 ;(function(window,document,undefined){
     var t = function(selector,original){
             return new t.p.init(selector,original);
