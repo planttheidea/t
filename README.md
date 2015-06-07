@@ -24,6 +24,7 @@ Currently:
 
 Future:
   - Improve / enhance ajax
+  - Add data API
   - Add promises
   - Add new methods that come to mind
 
