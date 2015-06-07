@@ -1350,7 +1350,7 @@
             }
 
             return t(siblingArray,this.original);
-        }
+        },
         text:function(txt){
             if(!t.is.undefined(txt)){
                 return this.each(function(el){
