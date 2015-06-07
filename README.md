@@ -19,13 +19,13 @@ Currently:
   - for methods that return a value (like .text()), an array of values based on each element in the object is returned
     (jQuery only retrieves the value of the first element in the object)
   - Additional returns in functions (describe in function definitions)
-  - Publish / Subscribe capabilities
+  - Publish / subscribe capabilities
   - Feature support testing capabilities
 
 Future:
   - Improve / enhance ajax
   - Add promises
-  - Add animation
+  - Add new methods that come to mind
 
 <h3>What are the functions?</h3>
 
@@ -402,4 +402,4 @@ console.log(t.supports.classList); // true
     - webSocket
     - webSQL
 
-This is just the first draft I've been working on over the last couple of weeks, there is much more to come!
+This is the second draft, after a long layoff I decided to rewrite a lot of components, remove some, add some more ... you know the deal. Still a work in progress.
