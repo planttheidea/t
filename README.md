@@ -1,14 +1,14 @@
 <h1>t.js Javascipt Library</h1>
 
 This is my feeble attempt at creating a lightweight JS library that is based on modern web standards. It
-is not intended to be a monolithic "make IE6 work like Chrome" solution, and it damned sure isn't ready for
+is not intended to be a monolithic "make IE6 work like Chrome" solution, and it definitely isn't ready for
 production usage. Also, forgive the rudimentary nature of this readme, I'm new to github.
 
 <h3>What makes it different than jQuery?</h3>
 
 Besides its completely experimental nature at this time? It's light, simple, and tries to focus on commonly-used
-methods. There are a lot of similarities because, by nature, we want to accomplish a lot of the same things. width()
-will give you the width, on() will add an event listener ... but there are subtle differences, and some additions
+methods. There are a lot of similarities because, by nature, we want to accomplish a lot of the same things. hide()
+will hide your div, on() will add an event listener ... but there are subtle differences, and some additions
 I think jQuery lacks.
 
 <h3>What are the differences?</h3>
