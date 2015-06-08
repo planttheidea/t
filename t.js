@@ -176,6 +176,66 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
                     return true;
                 }
             },
+            Pledge:function(){
+                this.add = function(resolution,rejection){
+                    this.puid++;
+                    
+                    this.resolutions[this.puid] = t.is.function(resolution) ? resolution : undefined;
+                    this.rejections[this.puid] = t.is.function(rejection) ? rejection : undefined;
+                };
+                
+                this.init = function(){
+                    this.resolutions = {};
+                    this.rejections = {};
+                    
+                    this.puid = this.cuid = -1;
+                };
+                
+                this.resolve = function(data){
+                    this.cuid++;
+                    
+                    if(!t.is.undefined(this.resolutions[this.cuid])){
+                        this.resolutions[this.cuid].call(this,data);
+                    }
+                };
+
+                this.reject = function(data){
+                    this.cuid++;
+
+                    if(!t.is.undefined(this.rejections[this.cuid])){
+                        this.rejections[this.cuid].call(this,data);
+                    }
+                };
+                
+                this.init();
+                
+                return this;
+            },
+            Postpone:function(){
+                var postpone = this;
+                
+                this.resolve = function(resolutionData){
+                    this.resolutionData = resolutionData;
+                    this.status = 'resolve';
+                };
+                
+                this.reject = function(rejectionData){
+                    this.rejectionData = rejectionData;
+                    this.status = 'reject';
+                };
+                
+                this.pledge = function(){
+                    return (new internal.Pledge()).start(function(){
+                        var pledge = this;
+                        
+                        if(postpone.status === 'resolve'){
+                            pledge.resolve(postpone.resolutionData);
+                        } else if(postpone.status === 'reject'){
+                            pledge.resolve(postpone.rejectionData);
+                        }
+                    });
+                };
+            },
             pubsub:(function(){
                 var topics = {},
                     IDs = {},
@@ -413,6 +473,68 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
             version:'0.1.0'
         };
 
+    internal.Pledge.prototype = {
+        finish:function(resolution,rejection){
+            this.add(resolution,rejection);
+        },
+        ordered:function(resolutions,rejections){
+            if(t.is.array(resolutions)){
+                var isRejectionArray = t.is.array(rejections),
+                    isRejectionFunction = !isRejectionArray && t.is.function(rejections);
+
+                for(var i = 0, len = resolutionss.length; i < len; i++){
+                    if(isRejectionArray){
+                        this.add(resolutions[i],rejections[i]);
+                    } else if(isRejectionFunction){
+                        this.add(resolutions[i],rejections);
+                    } else {
+                        this.add(resolutions[i]);
+                    }
+                }
+            }
+        },
+        parallel:function(resolutions,rejection){
+            if(t.is.array(resolutions)){
+                var len = resolutions.length,
+                    finished = [];
+
+                function newPledge(self,resolution,data){
+                    (new internal.Pledge()).start(function(){
+                        resolution.call(this,data);
+                    }).finish(function(newData){
+                        finished[finished.length] = newData;
+
+                        if(finished.length === len){
+                            self.resolve(finished);
+                        }
+                    });
+                }
+
+                return this.then(function(data){
+                    for(var i = len; i--;){
+                        newPledge(this,resolutions[i],data);
+
+                    }
+                },rejection);
+            }
+        },
+        start:function(fn){
+            if(t.is.function(fn)){
+                var pledge = this;
+
+                window.setTimeout(function(){
+                    fn.call(pledge);
+                },0);
+
+                return pledge;
+            }
+        },
+        then:function(resolution,rejection){
+            this.add(resolution,rejection);
+            return this;
+        }
+    };
+
     t.p = t.prototype = {
         each:function(callback){
             this.map(callback);
@@ -428,7 +550,6 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
             return results;
         },
         mapOne:function(callback){
-//                        return this.map(callback)[0];
             var m = this.map(callback);
             return (m.length !== 0 ? m : m[0]);
         },
@@ -725,6 +846,12 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
             }
 
             return ret;
+        },
+        pledge:function(){
+            return new internal.Pledge();
+        },
+        postpone:function(){
+            return new internal.Postpone();
         },
         publish:function(){
             internal.pubsub.publish.apply(this,arguments);
@@ -1237,8 +1364,6 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
         on:function(obj,target){
             if(t.is.object(obj)){
                 return this.each(function(el){
-                    var self = this;
-
                     if(!t.is.object(this.events)){
                         this.events = {};
                     }
@@ -1270,9 +1395,10 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
                         }
                     }
                 });
-            } else {
-                return this;
             }
+
+            return this;
+
         },
         off:function(events){
             if(t.is.array(events)){
