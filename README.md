@@ -23,9 +23,9 @@ Currently:
   - Feature support testing capabilities
 
 Future:
-  - Improve / enhance ajax
+  - Enhance ajax
+  - Enhance deferreds
   - Add data API
-  - Add promises
   - Add new methods that come to mind
 
 <h3>What are the functions?</h3>
