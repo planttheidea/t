@@ -276,6 +276,31 @@ t.ajax({
 });
 ```
 
+**copy**
+  - Creates a deep copy of the object passed to it
+```
+var newCopyObj = t.copy(existingObj);
+```
+
+**create**
+  - Creates a new dom node based on the HTML string passed to it
+    - Returns t object for dom node
+```html
+var newDiv = t.create('<div>Hello world</div>');
+```
+
+**each**
+  - Iterates over array / object as foreach
+```
+t,each(['some','simple','array'],function(item,i,arr){
+  console.log(item);
+});
+
+t.each({works:'for',objects:'too'},function(item,key,obj){
+  console.log(item);
+});
+```
+
 **is()**
   - Test if object matches specific type or value, returns boolean
 ```
