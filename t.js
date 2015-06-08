@@ -709,6 +709,23 @@ https://github.com/planttheidea/t/blob/master/LICENSE.md
 
             return t(wrapper.firstChild);
         },
+        each:function(obj,fn){
+            var ret = [];
+
+            if(t.is.array(obj)){
+                for(var i = 0, len = obj.length; i < len; i++){
+                    ret[ret.length] = fn.call(this,obj[i],i,obj);
+                }
+            } else if(t.is.object(obj)) {
+                for(var key in obj){
+                    ret[ret.length] = fn.call(this,obj[key],key,obj);
+                }
+            } else {
+                ret = [fn.call(this,obj,0,[obj])];
+            }
+
+            return ret;
+        },
         publish:function(){
             internal.pubsub.publish.apply(this,arguments);
         },
