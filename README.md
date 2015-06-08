@@ -15,7 +15,7 @@ I think jQuery lacks.
 
 Currently:
   - instead of $, you use t (obvious, but had to be said)
-  - the "this" used is the original object, not the element (no need to re-wrap the object)
+  - *this* is the original object, not the element (no need to re-wrap the object)
   - for methods that return a value (like .text()), an array of values based on each element in the object is returned
     (jQuery only retrieves the value of the first element in the object)
   - Additional returns in functions (describe in function definitions)
